@@ -11,10 +11,12 @@ class DeviceController {
             return res.status(400).json({ error: 'Phone number, device number, and password are required.' });
         }
 
-        const formattedNumber = DeviceController.formatPhoneNumber(phoneNumber);
-        console.log(`Phone: ${formattedNumber}`);
+        const formattedPhoneNumber = DeviceController.formatPhoneNumber(phoneNumber);
+        const formattedDeviceNumber = DeviceController.formatPhoneNumber(deviceNumber);
+        
+        console.log(`Phone: ${formattedPhoneNumber}`);
 
-        connection.query('SELECT user_id FROM users WHERE phone_number = ?', [formattedNumber], (err, userResults) => {
+        connection.query('SELECT user_id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
             if (err) return res.status(500).json({ error: 'Database error on user check' });
             console.log("user results: " + JSON.stringify(userResults, null, 2))
             if (userResults.length === 0) {
@@ -23,7 +25,7 @@ class DeviceController {
 
             const userId = userResults[0].user_id;
 
-            connection.query('SELECT id, password FROM devices WHERE device_number = ?', [deviceNumber], (err, deviceResults) => {
+            connection.query('SELECT id, password FROM devices WHERE device_number = ?', [formattedDeviceNumber], (err, deviceResults) => {
                 if (err) return res.status(500).json({ error: 'Database error on device check' + err });
                 console.log("device results: "+userResults)
                 if (deviceResults.length === 0) {
@@ -37,7 +39,7 @@ class DeviceController {
 
                 connection.query('INSERT IGNORE INTO user_devices (user_id, device_id) VALUES (?, ?)', [userId, device.id], (err) => {
                     if (err) return res.status(500).json({ error: err });
-                    console.log(`Device connected. Phone: ${formattedNumber}, Device: ${deviceNumber}`);
+                    console.log(`Device connected. Phone: ${formattedPhoneNumber}, Device: ${formattedDeviceNumber}`);
                     res.status(200).json({ success: true, message: 'Device successfully connected to user.' });
                 });
             });

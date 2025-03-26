@@ -38,6 +38,37 @@ class UserController {
     if (!phoneNumber.startsWith('+')) return `+${phoneNumber}`;
     return phoneNumber;
   }
+
+  static getUserDevices(req, res) {
+    const { phoneNumber } = req.body;
+  
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+  
+    const formattedNumber = UserController.formatPhoneNumber(phoneNumber);
+  
+    const query = `
+    SELECT devices.device_number
+    FROM user_devices
+    JOIN devices ON user_devices.device_id = devices.id
+    JOIN users ON user_devices.user_id = users.user_id
+    WHERE users.phone_number = ?`;
+  
+    connection.query(query, [formattedNumber], (err, results) => {
+      if (err) {
+        console.error('Error fetching devices:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+  
+      if (results.length === 0) {
+        return res.status(202).json({ found: true }); 
+      }
+  
+      res.json(results);
+    });
+  }
+  
 }
 
 module.exports = UserController;

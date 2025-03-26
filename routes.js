@@ -6,6 +6,9 @@ const deviceController = require('./controllers/deviceController');
 // Authentication
 router.post('/auth', userController.signUpOrSignIn);
 
+// Get user's devices
+router.post('/get-devices', userController.getUserDevices);
+
 // Device
 router.post('/connect-device', deviceController.connectDevice);
 
