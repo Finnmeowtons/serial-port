@@ -55,7 +55,7 @@ function processSMS(message) {
 
   try {
     const jsonData = JSON.parse(message);
-    const topic = "stick/state";
+    const topic = "639270734452/state";
 
     // Publish to MQTT
     MQTTService.publish(topic, jsonData);

@@ -1,5 +1,6 @@
 const connection = require('../connection/connection');
 const User = require('../models/userModel');
+const tokenService = require('../services/tokenService');
 const { sendOTP } = require('../controllers/smsController');
 
 class UserController {
@@ -29,6 +30,29 @@ class UserController {
         
         sendOTP(formattedNumber, otp, res)
       }
+    });
+  }
+
+  static confirmUser(req, res) {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    const formattedNumber = UserController.formatPhoneNumber(phoneNumber);
+    
+    connection.query('SELECT * FROM users WHERE phone_number = ?', [formattedNumber], (err, results) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const user = results[0];
+      const token = tokenService.generateToken(user.user_id, formattedNumber);
+      console.log(`User confirmed. Token: ${token}`);
+      res.json({ success: true, message: 'User confirmed successfully', token });
     });
   }
 

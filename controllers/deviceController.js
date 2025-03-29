@@ -8,8 +8,14 @@ class DeviceController {
         console.log(req.body);
 
         if (!phoneNumber || !deviceNumber || !password) {
-            return res.status(400).json({ error: 'Phone number, device number, and password are required.' });
-        }
+            const missingFields = [];
+            if (!phoneNumber) missingFields.push('Phone number');
+            if (!deviceNumber) missingFields.push('Device number');
+            if (!password) missingFields.push('Password');
+          
+            return res.status(400).json({ error: `Missing ${missingFields.join(', ')}.` });
+          }
+          
 
         const formattedPhoneNumber = DeviceController.formatPhoneNumber(phoneNumber);
         const formattedDeviceNumber = DeviceController.formatPhoneNumber(deviceNumber);
