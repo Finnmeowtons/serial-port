@@ -57,7 +57,6 @@ function processSMS(message) {
     const jsonData = JSON.parse(message);
     const topic = "639270734452/state";
 
-    // Publish to MQTT
     MQTTService.publish(topic, jsonData);
 
     console.log("Deleting processed SMS...");

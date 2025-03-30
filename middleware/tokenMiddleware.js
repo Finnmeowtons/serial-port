@@ -11,7 +11,7 @@ const tokenMiddleware = (req, res, next) => {
 
   try {
     const decoded = tokenService.verifyToken(token);
-    req.user = decoded; // Attach decoded user info to req
+    req.user = decoded; 
     next();
   } catch (error) {
     return res.status(403).json({ error: error.message });

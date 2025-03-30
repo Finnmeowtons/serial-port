@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const SECRET_KEY = 'MarasiganBustilloSorianoSalasRepato'; // Use env variable in production
+const SECRET_KEY = 'MarasiganBustilloSorianoSalasRepato';
 
 class TokenService {
   static generateToken(userId, phoneNumber) {
