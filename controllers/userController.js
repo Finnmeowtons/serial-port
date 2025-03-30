@@ -64,6 +64,7 @@ class UserController {
   }
 
   static getUserDevices(req, res) {
+    console.log("getting user device")
     const { phoneNumber } = req.body;
   
     if (!phoneNumber) {

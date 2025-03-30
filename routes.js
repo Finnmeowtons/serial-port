@@ -11,6 +11,7 @@ router.post('/confirm', userController.confirmUser);
 router.post('/get-devices', userController.getUserDevices);
 
 // Device
+router.delete('/delete-device', deviceController.deleteDevice);
 router.post('/connect-device', deviceController.connectDevice);
 
 module.exports = router;

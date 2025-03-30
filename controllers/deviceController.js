@@ -21,6 +21,7 @@ class DeviceController {
         const formattedDeviceNumber = DeviceController.formatPhoneNumber(deviceNumber);
         
         console.log(`Phone: ${formattedPhoneNumber}`);
+        console.log(`SELECT user_id FROM users WHERE phone_number = `,formattedPhoneNumber);
 
         connection.query('SELECT user_id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
             if (err) return res.status(500).json({ error: 'Database error on user check' });
@@ -30,7 +31,7 @@ class DeviceController {
             }
 
             const userId = userResults[0].user_id;
-
+            console.log(userId);
             connection.query('SELECT id, password FROM devices WHERE device_number = ?', [formattedDeviceNumber], (err, deviceResults) => {
                 if (err) return res.status(500).json({ error: 'Database error on device check' + err });
                 console.log("device results: "+userResults)
@@ -58,6 +59,46 @@ class DeviceController {
         if (!phoneNumber.startsWith('+')) return `+${phoneNumber}`;
         return phoneNumber;
     }
+
+    static deleteDevice(req, res) {
+        console.log("deleteing")
+        const { phoneNumber, deviceNumber } = req.body;
+    
+        if (!phoneNumber || !deviceNumber) {
+            return res.status(400).json({ error: 'Phone number and device number are required.' });
+        }
+    
+        const formattedPhoneNumber = DeviceController.formatPhoneNumber(phoneNumber);
+        const formattedDeviceNumber = DeviceController.formatPhoneNumber(deviceNumber);
+    
+        connection.query('SELECT user_id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
+            if (err) return res.status(500).json({ error: 'Database error on user check' });
+            if (userResults.length === 0) {
+                return res.status(404).json({ error: 'User not found.' });
+            }
+    
+            const userId = userResults[0].user_id;
+    
+            connection.query('SELECT id FROM devices WHERE device_number = ?', [formattedDeviceNumber], (err, deviceResults) => {
+                if (err) return res.status(500).json({ error: 'Database error on device check' });
+                if (deviceResults.length === 0) {
+                    return res.status(404).json({ error: 'Device not found.' });
+                }
+    
+                const deviceId = deviceResults[0].id;
+    
+                // Delete connection from user_devices table
+                connection.query('DELETE FROM user_devices WHERE user_id = ? AND device_id = ?', [userId, deviceId], (err) => {
+                    if (err) return res.status(500).json({ error: 'Error removing device connection' });
+                    
+
+                    res.status(200).json({ success: true, message: 'Device disconnected successfully.' });
+                   
+                });
+            });
+        });
+    }
+    
 }
 
 module.exports = DeviceController;
