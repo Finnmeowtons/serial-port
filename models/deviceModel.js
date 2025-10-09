@@ -1,7 +1,7 @@
 class Device {
-    constructor(device_id, device_number, password) {
+    constructor(device_id, device_uid, password) {
       this.device_id = device_id;
-      this.device_number = device_number;
+      this.device_uid = device_uid;
       this.password = password;
     }
   }
