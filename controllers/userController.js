@@ -63,13 +63,14 @@ class UserController {
     return phoneNumber;
   }
 
-  static getUserDevices(req, res) {
+ static getUserDevices(req, res) {
   const { phoneNumber } = req.body;
 
   if (!phoneNumber) {
     return res.status(400).json({ error: 'Phone number is required' });
   }
-  const formattedPhoneNumber = UserController.formatPhoneNumber(phoneNumber)
+
+  const formattedPhoneNumber = UserController.formatPhoneNumber(phoneNumber);
   console.log("Getting all registered devices for phone number:", formattedPhoneNumber);
 
   // Step 1: Find user_id by phone number
@@ -89,7 +90,7 @@ class UserController {
 
     // Step 2: Get all devices linked to that user_id
     const getDevicesQuery = `
-      SELECT d.id, d.device_ui99
+      SELECT ud.id, d.device_uid, ud.name, ud.profile_picture_url
       FROM user_devices ud
       JOIN devices d ON ud.device_id = d.id
       WHERE ud.user_id = ?
@@ -101,14 +102,12 @@ class UserController {
         return res.status(500).json({ error: 'Database error (devices)' });
       }
 
-      if (deviceResults.length === 0) {
-        return res.status(200).json({ message: 'No registered devices found.' });
-      }
-
-      res.status(200).json(deviceResults);
+      // ✅ Return an empty array instead of message
+      return res.status(200).json(deviceResults || []);
     });
   });
 }
+
 
 
 

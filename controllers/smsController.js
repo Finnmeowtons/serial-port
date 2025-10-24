@@ -1,5 +1,4 @@
 const { SerialPort, ReadlineParser } = require("serialport");
-const MQTTService = require("../services/MQTTService");
 
 const baudRate = 9600;
 const port = new SerialPort({ path: "COM3", baudRate: baudRate });
@@ -50,25 +49,46 @@ parser.on("data", (data) => {
   }
 });
 
-function processSMS(message) {
-  console.log("Processing SMS:", message);
+async function sendSMS(phoneNumber, message) {
+  return new Promise((resolve, reject) => {
+    const command = `AT+CMGS="${phoneNumber}"\r`;
+    let buffer = '';
 
-  try {
-    const jsonData = JSON.parse(message);
-    const topic = "639270734452/state";
+    // Listen for modem data
+    const onData = (data) => {
+      const received = data.toString();
+      buffer += received;
 
-    MQTTService.publish(topic, jsonData);
+      if (received.includes('>')) {
+        // Modem ready to receive message
+        port.write(message + String.fromCharCode(26)); // Ctrl+Z
+        console.log(`📤 Sending SMS to ${phoneNumber}: ${message}`);
+      }
 
-    console.log("Deleting processed SMS...");
-    port.write(`AT+CMGD=1,4\r`);
-  } catch (error) {
-    console.error("Failed to parse SMS as JSON:", error);
-    port.write(`AT+CMGD=1,4\r`);
-  }
+      if (received.includes('OK')) {
+        console.log(`✅ SMS sent successfully to ${phoneNumber}`);
+        port.off('data', onData); // Remove listener
+        resolve();
+      }
+
+      if (received.includes('ERROR')) {
+        console.error(`❌ Failed to send SMS to ${phoneNumber}`);
+        port.off('data', onData);
+        reject(new Error('SMS sending failed'));
+      }
+    };
+
+    port.on('data', onData);
+    port.write(command);
+  });
 }
 
+
 function sendOTP(phoneNumber, otp, res) {
-  const message = `Your OTP is: ${otp}`;
+  const message = `WayFinder Verification Code: ${otp}
+
+If you didn't request this code, please ignore this message. Never share it with anyone.`;
+
   const command = `AT+CMGS=\"${phoneNumber}\"\r`;
 
   port.write(command);
@@ -81,4 +101,4 @@ function sendOTP(phoneNumber, otp, res) {
 }
 
 
-module.exports = { sendOTP };
+module.exports = { sendOTP, sendSMS };
