@@ -2,7 +2,7 @@ const { SerialPort, ReadlineParser } = require("serialport");
 const MQTTService = require("../services/MQTTService");
 
 const baudRate = 9600;
-const port = new SerialPort({ path: "COM4", baudRate: baudRate });
+const port = new SerialPort({ path: "COM3", baudRate: baudRate });
 
 const parser = port.pipe(new ReadlineParser({ delimiter: "\r\n" }));
 

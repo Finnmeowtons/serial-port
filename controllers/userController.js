@@ -27,7 +27,7 @@ class UserController {
         });
       } else {
         console.log(`User signed in. Phone: ${formattedNumber}`);
-        
+
         sendOTP(formattedNumber, otp, res)
       }
     });
@@ -41,10 +41,10 @@ class UserController {
     }
 
     const formattedNumber = UserController.formatPhoneNumber(phoneNumber);
-    
+
     connection.query('SELECT * FROM users WHERE phone_number = ?', [formattedNumber], (err, results) => {
       if (err) return res.status(500).json({ error: 'Database error' });
-      
+
       if (results.length === 0) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -64,36 +64,54 @@ class UserController {
   }
 
   static getUserDevices(req, res) {
-    console.log("getting user device")
-    const { phoneNumber } = req.body;
-  
-    if (!phoneNumber) {
-      return res.status(400).json({ error: 'Phone number is required' });
+  const { phoneNumber } = req.body;
+
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'Phone number is required' });
+  }
+  const formattedPhoneNumber = UserController.formatPhoneNumber(phoneNumber)
+  console.log("Getting all registered devices for phone number:", formattedPhoneNumber);
+
+  // Step 1: Find user_id by phone number
+  const getUserQuery = `SELECT id FROM users WHERE phone_number = ?`;
+
+  connection.query(getUserQuery, [formattedPhoneNumber], (err, userResults) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ error: 'Database error (users)' });
     }
-  
-    const formattedNumber = UserController.formatPhoneNumber(phoneNumber);
-  
-    const query = `
-    SELECT devices.device_number
-    FROM user_devices
-    JOIN devices ON user_devices.device_id = devices.id
-    JOIN users ON user_devices.user_id = users.user_id
-    WHERE users.phone_number = ?`;
-  
-    connection.query(query, [formattedNumber], (err, results) => {
+
+    if (userResults.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userId = userResults[0].id;
+
+    // Step 2: Get all devices linked to that user_id
+    const getDevicesQuery = `
+      SELECT d.id, d.device_ui99
+      FROM user_devices ud
+      JOIN devices d ON ud.device_id = d.id
+      WHERE ud.user_id = ?
+    `;
+
+    connection.query(getDevicesQuery, [userId], (err, deviceResults) => {
       if (err) {
         console.error('Error fetching devices:', err);
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: 'Database error (devices)' });
       }
-  
-      if (results.length === 0) {
-        return res.status(202).json({ found: true }); 
+
+      if (deviceResults.length === 0) {
+        return res.status(200).json({ message: 'No registered devices found.' });
       }
-  
-      res.json(results);
+
+      res.status(200).json(deviceResults);
     });
-  }
-  
+  });
+}
+
+
+
 }
 
 module.exports = UserController;

@@ -21,18 +21,18 @@ class DeviceController {
         const formattedDeviceNumber = DeviceController.formatPhoneNumber(deviceNumber);
         
         console.log(`Phone: ${formattedPhoneNumber}`);
-        console.log(`SELECT user_id FROM users WHERE phone_number = `,formattedPhoneNumber);
+        console.log(`SELECT id FROM users WHERE phone_number =`,formattedPhoneNumber);
 
-        connection.query('SELECT user_id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
+        connection.query('SELECT id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
             if (err) return res.status(500).json({ error: 'Database error on user check' });
             console.log("user results: " + JSON.stringify(userResults, null, 2))
             if (userResults.length === 0) {
                 return res.status(404).json({ error: 'User not found.' });
             }
 
-            const userId = userResults[0].user_id;
-            console.log(userId);
-            connection.query('SELECT id, password FROM devices WHERE device_number = ?', [formattedDeviceNumber], (err, deviceResults) => {
+            const userId = userResults[0].id;
+            console.log("User ID: " + userId);
+            connection.query('SELECT id, password FROM devices WHERE device_uid = ?', [formattedDeviceNumber], (err, deviceResults) => {
                 if (err) return res.status(500).json({ error: 'Database error on device check' + err });
                 console.log("device results: "+userResults)
                 if (deviceResults.length === 0) {
@@ -44,7 +44,7 @@ class DeviceController {
                     return res.status(401).json({ error: 'Incorrect device password.' });
                 }
 
-                connection.query('INSERT IGNORE INTO user_devices (user_id, device_id) VALUES (?, ?)', [userId, device.id], (err) => {
+                connection.query('INSERT INTO user_devices (user_id, device_id) VALUES (?, ?)', [userId, device.id], (err) => {
                     if (err) return res.status(500).json({ error: err });
                     console.log(`Device connected. Phone: ${formattedPhoneNumber}, Device: ${formattedDeviceNumber}`);
                     res.status(200).json({ success: true, message: 'Device successfully connected to user.' });
@@ -71,15 +71,15 @@ class DeviceController {
         const formattedPhoneNumber = DeviceController.formatPhoneNumber(phoneNumber);
         const formattedDeviceNumber = DeviceController.formatPhoneNumber(deviceNumber);
     
-        connection.query('SELECT user_id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
+        connection.query('SELECT id FROM users WHERE phone_number = ?', [formattedPhoneNumber], (err, userResults) => {
             if (err) return res.status(500).json({ error: 'Database error on user check' });
             if (userResults.length === 0) {
                 return res.status(404).json({ error: 'User not found.' });
             }
     
-            const userId = userResults[0].user_id;
+            const userId = userResults[0].id;
     
-            connection.query('SELECT id FROM devices WHERE device_number = ?', [formattedDeviceNumber], (err, deviceResults) => {
+            connection.query('SELECT id FROM devices WHERE device_uid = ?', [formattedDeviceNumber], (err, deviceResults) => {
                 if (err) return res.status(500).json({ error: 'Database error on device check' });
                 if (deviceResults.length === 0) {
                     return res.status(404).json({ error: 'Device not found.' });
